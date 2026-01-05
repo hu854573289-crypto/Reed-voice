@@ -1,109 +1,126 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>WhatsApp Router</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
-    .card {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    select, .btn {
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      font-size: 16px;
-      border-radius: 6px;
-    }
-    .btn {
-      background: #25D366;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-      display: block;
-    }
-    .btn.disabled {
-      background: #ccc;
-      pointer-events: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Contact Selector</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:Arial,sans-serif;padding:20px;max-width:420px;margin:auto;}
+select,button,input{width:100%;padding:12px;margin-top:12px;font-size:16px;}
+button{background:#25D366;color:#fff;border:none;border-radius:4px;}
+.hidden{visibility:hidden;height:0;overflow:hidden;}
+.admin{margin-top:20px;border-top:1px solid #ccc;padding-top:15px;}
+.admin button{background:#666;}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+th,td{border:1px solid #ccc;padding:6px;}
+</style>
 </head>
 <body>
 
-<div class="card">
-  <h2>Select Product Line</h2>
+<h3>Select Product Line</h3>
+<select id="product"></select>
+<select id="region"></select>
+<button id="go">Go to WhatsApp</button>
 
-  <select id="product">
-    <option value="">-- Select Product Line --</option>
-    <option value="Hematology">Hematology</option>
-    <option value="Biochemistry">Biochemistry</option>
-    <option value="CLIA">CLIA</option>
-    <option value="TLA">TLA</option>
-    <option value="Others">Others</option>
-  </select>
-
-  <select id="region" disabled>
-    <option value="">-- Select Region --</option>
-  </select>
-
-  <a id="goLink" class="btn disabled" href="#">Open WhatsApp</a>
+<div class="admin">
+  <button id="adminBtn">Admin Login</button>
+  <div id="adminBox" class="hidden">
+    <input type="password" id="pwd" placeholder="Password">
+    <button id="viewBtn">View Stats</button>
+    <div id="panel" class="hidden">
+      <table><thead><tr><th>Option</th><th>Count</th></tr></thead><tbody id="stats"></tbody></table>
+    </div>
+  </div>
 </div>
 
 <script>
-const mapping = {
-  Hematology: {
-    "Thailand/Korea/港澳台/South Asia": "8618682294752",
-    "ASEAN / Indonesia / Philippines": "6285218959444"
-  },
-  Biochemistry: { APAC: "66968436824" },
-  CLIA: { APAC: "66968436824" },
-  TLA: {
-    Thailand: "66968436824",
-    "Not Thailand": "8618682294752"
-  },
-  Others: { APAC: "8618682294752" }
+var DATA=[
+{p:"Hematology",r:"Thailand/Korea/港澳台/South Asia",w:"+8618682294752"},
+{p:"Hematology",r:"ASEAN REGION/Indonesia/Philippines",w:"+6285218959444"},
+{p:"Biochemistry",r:"APAC",w:"+66968436824"},
+{p:"CLIA",r:"APAC",w:"+66968436824"},
+{p:"TLA",r:"Thailand",w:"+66968436824"},
+{p:"TLA",r:"Not Thailand",w:"+8618682294752"},
+{p:"Others",r:"APAC",w:"+8618682294752"}
+];
+
+var product=document.getElementById("product");
+var region=document.getElementById("region");
+var go=document.getElementById("go");
+var adminBtn=document.getElementById("adminBtn");
+var adminBox=document.getElementById("adminBox");
+var pwd=document.getElementById("pwd");
+var viewBtn=document.getElementById("viewBtn");
+
+product.innerHTML='<option value="">Select Product Line</option>';
+region.innerHTML='<option value="">Select Region</option>';
+
+var map={},i;
+for(i=0;i<DATA.length;i++){map[DATA[i].p]=1;}
+for(var k in map){
+ var o=document.createElement("option");
+ o.value=k;o.innerHTML=k;product.appendChild(o);
+}
+
+product.onchange=function(){
+ region.innerHTML='<option value="">Select Region</option>';
+ var used={};
+ for(i=0;i<DATA.length;i++){
+  if(DATA[i].p==product.value&&!used[DATA[i].r]){
+   used[DATA[i].r]=1;
+   var o=document.createElement("option");
+   o.value=DATA[i].r;o.innerHTML=DATA[i].r;region.appendChild(o);
+  }
+ }
 };
 
-const product = document.getElementById("product");
-const region = document.getElementById("region");
-const goLink = document.getElementById("goLink");
-
-product.addEventListener("change", () => {
-  region.innerHTML = '<option value="">-- Select Region --</option>';
-  goLink.classList.add("disabled");
-  goLink.href = "#";
-
-  if (!product.value) {
-    region.disabled = true;
-    return;
+go.onclick=function(){
+ var p=product.value,r=region.value;
+ for(i=0;i<DATA.length;i++){
+  if(DATA[i].p==p&&DATA[i].r==r){
+   save(p+" / "+r);
+   location.href="https://wa.me/"+DATA[i].w.replace(/[^0-9]/g,"");
+   return;
   }
+ }
+};
 
-  Object.keys(mapping[product.value]).forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r;
-    opt.textContent = r;
-    region.appendChild(opt);
-  });
+adminBtn.onclick=function(){
+ adminBox.className="";
+ pwd.focus();
+};
 
-  region.disabled = false;
-});
+viewBtn.onclick=function(){
+ if(pwd.value!="admin123"){alert("Wrong password");return;}
+ document.getElementById("panel").className="";
+ render();
+};
 
-region.addEventListener("change", () => {
-  if (!region.value) {
-    goLink.classList.add("disabled");
-    goLink.href = "#";
-    return;
-  }
-  const phone = mapping[product.value][region.value];
-  goLink.href = "https://wa.me/" + phone;
-  goLink.classList.remove("disabled");
-});
+function save(key){
+ var now=new Date().getTime();
+ var wk=week(new Date());
+ var s=JSON.parse(localStorage.getItem("s")||"{}");
+ for(var k in s){if(s[k].t<now-90*24*3600*1000)delete s[k];}
+ var id=key+"_"+wk;
+ if(!s[id])s[id]={k:key,w:wk,c:0,t:now};
+ s[id].c++;
+ localStorage.setItem("s",JSON.stringify(s));
+}
+
+function week(d){
+ var j=new Date(d.getFullYear(),0,1);
+ return d.getFullYear()+"-W"+Math.ceil((((d-j)/86400000)+j.getDay()+1)/7);
+}
+
+function render(){
+ var s=JSON.parse(localStorage.getItem("s")||"{}");
+ var tb=document.getElementById("stats");tb.innerHTML="";
+ for(var k in s){
+  var tr=document.createElement("tr");
+  tr.innerHTML="<td>"+s[k].k+" ("+s[k].w+")</td><td>"+s[k].c+"</td>";
+  tb.appendChild(tr);
+ }
+}
 </script>
 
 </body>
