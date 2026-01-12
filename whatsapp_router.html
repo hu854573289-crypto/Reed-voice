@@ -1,219 +1,97 @@
-﻿<!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-  <meta charset="UTF-8">
-
-  <title>WhatsApp Router</title>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-
-    body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
-
-    .card {
-
-      max-width: 400px;
-
-      margin: auto;
-
-      background: white;
-
-      padding: 20px;
-
-      border-radius: 10px;
-
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-
-    }
-
-    select, .btn {
-
-      width: 100%;
-
-      padding: 12px;
-
-      margin-top: 12px;
-
-      font-size: 16px;
-
-      border-radius: 6px;
-
-    }
-
-    .btn {
-
-      background: #25D366;
-
-      color: white;
-
-      text-align: center;
-
-      text-decoration: none;
-
-      display: block;
-
-    }
-
-    .btn.disabled {
-
-      background: #ccc;
-
-      pointer-events: none;
-
-    }
-
-  </style>
-
+<meta charset="UTF-8">
+<title>Mindray Support</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial; padding: 20px; }
+button, select { width: 100%; padding: 12px; margin-top: 15px; font-size: 16px; }
+.hidden { display: none; }
+.modal {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
+}
+.box {
+  background: #fff; padding: 20px; border-radius: 10px; text-align: center; width: 80%;
+}
+</style>
 </head>
-
 <body>
 
-
-
-<div class="card">
-
-  <h2>Select Product Line</h2>
-
-
-
-  <select id="product">
-
-    <option value="">-- Select Product Line --</option>
-
-    <option value="Hematology">Hematology</option>
-
-    <option value="Biochemistry">Biochemistry</option>
-
-    <option value="CLIA">CLIA</option>
-
-    <option value="TLA">TLA</option>
-
-    <option value="Others">Others</option>
-
-  </select>
-
-
-
-  <select id="region" disabled>
-
-    <option value="">-- Select Region --</option>
-
-  </select>
-
-
-
-  <a id="goLink" class="btn disabled" href="#">Open WhatsApp</a>
-
+<div id="firstModal" class="modal">
+  <div class="box">
+    <p>Did you already check Mindray AI?</p >
+    <button id="yesBtn">Yes</button>
+    <button onclick="goAI()">No</button>
+  </div>
 </div>
 
+<div id="selectPage" class="hidden">
+  <h3>Select Product Line</h3>
+  <select id="product">
+    <option value="">-- Select --</option>
+    <option>Hematology</option>
+    <option>Biochemistry</option>
+    <option>CLIA</option>
+    <option>TLA</option>
+    <option>Others</option>
+  </select>
 
+  <button onclick="showRegion()">Next</button>
+
+  <div id="regionBlock" class="hidden">
+    <h3>Select Region</h3>
+    <select id="region"></select>
+    <button onclick="goWA()">Next</button>
+  </div>
+</div>
 
 <script>
-
-const mapping = {
-
-  Hematology: {
-
-    "Thailand/Korea/港澳台/South Asia": "8618682294752",
-
-    "ASEAN / Indonesia / Philippines": "6285218959444"
-
+const data = {
+  "Hematology": {
+    "Thailand/Korea/港澳台/South Asia": "+8618682294752",
+    "ASEAN REGION/Indonesia/Philippines": "+6285218959444"
   },
-
-  Biochemistry: { APAC: "66968436824" },
-
-  CLIA: { APAC: "66968436824" },
-
-  TLA: {
-
-    Thailand: "66968436824",
-
-    "Not Thailand": "8618682294752"
-
-  },
-
-  Others: { APAC: "8618682294752" }
-
+  "Biochemistry": {"APAC": "+66968436824"},
+  "CLIA": {"APAC": "+66968436824"},
+  "TLA": {"Thailand": "+66968436824", "Not Thailand": "+8618682294752"},
+  "Others": {"APAC": "+8618682294752"}
 };
 
+document.getElementById("yesBtn").onclick = function() {
+  document.getElementById("firstModal").style.display = "none";
+  document.getElementById("selectPage").style.display = "block";
+};
 
+function showRegion() {
+  const p = document.getElementById("product").value;
+  if (!p) return alert("Please select Product line");
 
-const product = document.getElementById("product");
-
-const region = document.getElementById("region");
-
-const goLink = document.getElementById("goLink");
-
-
-
-product.addEventListener("change", () => {
-
-  region.innerHTML = '<option value="">-- Select Region --</option>';
-
-  goLink.classList.add("disabled");
-
-  goLink.href = "#";
-
-
-
-  if (!product.value) {
-
-    region.disabled = true;
-
-    return;
-
+  const r = document.getElementById("region");
+  r.innerHTML = '<option value="">-- Select --</option>';
+  for (let k in data[p]) {
+    const o = document.createElement("option");
+    o.value = k;
+    o.text = k;
+    r.appendChild(o);
   }
+  document.getElementById("regionBlock").style.display = "block";
+}
 
+function goWA() {
+  const p = document.getElementById("product").value;
+  const r = document.getElementById("region").value;
+  if (!r) return alert("Please select Region");
 
+  location.href = "https://wa.me/" + data[p][r].replace(/\D/g,"");
+}
 
-  Object.keys(mapping[product.value]).forEach(r => {
-
-    const opt = document.createElement("option");
-
-    opt.value = r;
-
-    opt.textContent = r;
-
-    region.appendChild(opt);
-
-  });
-
-
-
-  region.disabled = false;
-
-});
-
-
-
-region.addEventListener("change", () => {
-
-  if (!region.value) {
-
-    goLink.classList.add("disabled");
-
-    goLink.href = "#";
-
-    return;
-
-  }
-
-  const phone = mapping[product.value][region.value];
-
-  goLink.href = "https://wa.me/" + phone;
-
-  goLink.classList.remove("disabled");
-
-});
-
+function goAI() {
+  location.href = "https://imind.mindray.com/chatAi?chatUriType=YF&&appid=tis&&chatid=2&&bottomLineReply=1&&evaluationReminder=1";
+}
 </script>
 
-
-
 </body>
-
 </html>
